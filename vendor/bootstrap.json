@@ -1,0 +1,41 @@
+[
+	{
+		"name": "assimp",
+		"source": {
+			"type": "git",
+			"url": "https://github.com/assimp/assimp.git",
+			"revision": "v5.2.5"
+		}
+	},
+	{
+		"name": "stb",
+		"source": {
+			"type": "git",
+			"url": "https://github.com/nothings/stb.git"
+		}
+	},
+	{
+		"name": "glm",
+		"source": {
+			"type": "git",
+			"url": "https://github.com/g-truc/glm.git",
+			"revision": "0.9.9.8"
+		}
+	},
+	{
+		"name": "lz4",
+		"source": {
+			"type": "git",
+			"url": "https://github.com/lz4/lz4.git",
+			"revision": "v1.9.4"
+		}
+	},
+	{
+		"name": "json",
+		"source": {
+			"type": "git",
+			"url": "https://github.com/nlohmann/json",
+			"revision": "v3.11.2"
+		}
+	}
+]
