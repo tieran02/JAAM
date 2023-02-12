@@ -48,7 +48,16 @@ bool ConvertImage(const fs::path& input, const fs::path& output, const fs::path&
 
 int main(int argc, char** argv)
 {
-	for (int i = 0; i < argc; ++i)
+	AssetManager<int> manager;
+	AssetHandle handle = manager.Load("Test");
+
+	AssetHandle handleCopy = handle;
+
+
+
+	AssetHandle handle1 = manager.Load("Test");
+
+	/*for (int i = 0; i < argc; ++i)
 		std::cout << argv[i] << '\n';
 
 	const fs::path path{ argv[1] };
@@ -77,5 +86,5 @@ int main(int argc, char** argv)
 			newpath.replace_extension(".mesh");
 			ConvertMesh(p.path(), newpath, rootPath);
 		}
-	}
+	}*/
 }
