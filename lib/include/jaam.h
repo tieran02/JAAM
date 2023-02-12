@@ -6,3 +6,8 @@
 #include "assetMesh.h"
 #include "assetMaterial.h"
 #include "assetModel.h"
+
+namespace Asset
+{
+	typedef AssetManager < TextureInfo, FileType{ 'T','E','X','I' } > TextureManager;
+}

@@ -28,11 +28,16 @@ TextureInfo::TextureInfo() :
 
 }
 
-TextureInfo Asset::ReadTextureInfo(AssetFile* file)
+TextureInfo::TextureInfo(const AssetFile& assetFile)
+{
+	*this = ReadTextureInfo(assetFile);
+}
+
+TextureInfo Asset::ReadTextureInfo(const AssetFile& file)
 {
 	TextureInfo info;
 
-	nlohmann::json texture_metadata = nlohmann::json::parse(file->json);
+	nlohmann::json texture_metadata = nlohmann::json::parse(file.json);
 
 	std::string formatString = texture_metadata["format"];
 	info.textureFormat = ParseFormat(formatString.c_str());

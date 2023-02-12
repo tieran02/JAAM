@@ -6,12 +6,15 @@
 
 namespace Asset
 {
+	typedef std::array<char, 4> FileType;
+
 	struct AssetFile
 	{
 		AssetFile();
 
-		std::array<char, 4> type;
+		FileType type;
 		uint32_t version;
+		uint16_t checksum;
 		std::string json;
 		std::vector<char> binaryBlob;
 	};

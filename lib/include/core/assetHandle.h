@@ -18,13 +18,21 @@ namespace Asset
 	/// </summary>
 	struct AssetHandle
 	{
-		AssetHandle(HandleIndex index, HandleChecksum checksum, BaseAssetManager& assetManager);
+		AssetHandle(HandleIndex index, HandleChecksum checksum, BaseAssetManager* assetManager);
 		~AssetHandle();
 		AssetHandle(const AssetHandle& otherHandle);
 
 		HandleValue Value() const;
 		HandleIndex Index() const;
 		HandleChecksum Checksum() const;
+
+		bool IsValid() const;
+
+		bool operator==(const AssetHandle& rhs)
+		{
+			return Value() == rhs.Value();
+		}
+
 	private:
 		union
 		{
@@ -39,4 +47,6 @@ namespace Asset
 		BaseAssetManager* m_manager;
 	};
 
+	
+	extern AssetHandle InvalidHandle;
 }

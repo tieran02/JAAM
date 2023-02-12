@@ -38,6 +38,9 @@ void BaseAssetManager::Release(HandleIndex index)
 
 	//Remove the ref count from refCount map
 	m_refCount.erase(index);
+
+	//Remove the checksum
+	m_checkSums.erase(index);
 }
 
 bool BaseAssetManager::UriExists(const std::string& uri) const
@@ -45,10 +48,11 @@ bool BaseAssetManager::UriExists(const std::string& uri) const
 	return m_uriMap.find(uri) != m_uriMap.end();
 }
 
-void BaseAssetManager::AddNew(HandleIndex index, const std::string& uri)
+void BaseAssetManager::AddNew(HandleIndex index, const std::string& uri, uint16_t checkSum)
 {
 	m_uriMap.emplace(uri, index);
 	m_refCount.emplace(index, 0).first;
+	m_checkSums.emplace(index, checkSum);
 }
 
 HandleIndex BaseAssetManager::GetIndexFromUri(const std::string& uri) const
@@ -56,4 +60,16 @@ HandleIndex BaseAssetManager::GetIndexFromUri(const std::string& uri) const
 	auto it = m_uriMap.find(uri);
 	assert(it != m_uriMap.end());
 	return it->second;
+}
+
+HandleChecksum BaseAssetManager::GetChecksumFromIndex(HandleIndex index) const
+{
+	auto it = m_checkSums.find(index);
+	assert(it != m_checkSums.end());
+	return it->second;
+}
+
+Asset::HandleChecksum BaseAssetManager::GetChecksumFromUri(const std::string& uri) const
+{
+	return GetChecksumFromIndex(GetIndexFromUri(uri));
 }

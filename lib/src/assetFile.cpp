@@ -21,6 +21,10 @@ bool Asset::SaveBinaryFile(const char* path, const AssetFile& file)
 	//version
 	outfile.write((const char*)&version, sizeof(uint32_t));
 
+	uint16_t checksum = file.checksum;
+	//checksum
+	outfile.write((const char*)&checksum, sizeof(uint16_t));
+
 	//json length
 	uint32_t length = static_cast<uint32_t>(file.json.size());
 	outfile.write((const char*)&length, sizeof(uint32_t));
@@ -51,6 +55,7 @@ bool Asset::LoadBinaryFile(const char* path, AssetFile& outputFile)
 
 	infile.read(outputFile.type.data(), 4);
 	infile.read((char*)&outputFile.version, sizeof(uint32_t));
+	infile.read((char*)&outputFile.checksum, sizeof(uint16_t));
 
 	uint32_t jsonlen = 0;
 	infile.read((char*)&jsonlen, sizeof(uint32_t));
