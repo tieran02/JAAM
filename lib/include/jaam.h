@@ -9,6 +9,7 @@
 namespace Asset
 {
 	struct EmptyUserData {};
+	using TextureManagerBasic = AssetManager<TextureInfo, EmptyUserData>;
 
 	template <typename T>
 	using TextureManager = AssetManager<TextureInfo, T>;

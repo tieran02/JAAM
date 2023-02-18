@@ -49,27 +49,10 @@ bool ConvertImage(const fs::path& input, const fs::path& output, const fs::path&
 	return true;
 }
 
-struct TestUserData
-{
-	int a;
-};
-
-void OnLoad(const TextureInfo& info, TestUserData& userData)
-{
-	userData.a = 1;
-}
-
-void OnUnload(const TextureInfo& info, TestUserData& userData)
-{
-	userData.a = 0;
-}
 
 int main(int argc, char** argv)
 {
-	Asset::TextureManager<TestUserData> textureManager;
-	textureManager.SetOnLoadCallback(&OnLoad);
-	textureManager.SetOnUnloadCallback(&OnUnload);
-
+	Asset::TextureManagerBasic textureManager;
 	AssetHandle textureHandle = textureManager.Load("data/models/sponza/textures/background.tx");
 	AssetHandle textureHandleLoad1 = textureManager.Load("data/models/sponza/textures/background.tx");
 
