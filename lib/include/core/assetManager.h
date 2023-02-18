@@ -53,6 +53,9 @@ namespace Asset
 	template <typename T, FileType ftype>
 	T* Asset::AssetManager<T, ftype>::Get(const AssetHandle& handle)
 	{
+		if (handle == InvalidHandle)
+			return nullptr;
+
 		bool valid = handle.IsValid() && handle.Index() < m_data.size();
 		assert(valid);
 
@@ -76,7 +79,7 @@ namespace Asset
 
 		//Load asset File
 		AssetFile file;
-		LoadBinaryFile(uri.c_str(), file);
+		file.LoadBinaryFile(uri.c_str());
 
 		//check if filetypes match
 		bool fileTypeMatch = !memcmp(file.type.data(), fileType.data(), fileType.size());

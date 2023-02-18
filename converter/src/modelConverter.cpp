@@ -17,12 +17,6 @@ using namespace Asset;
 
 namespace
 {
-	std::string AssimpMeshName(const aiScene* scene, int meshIndex)
-	{
-		std::string matname = "MESH_" + std::to_string(meshIndex) + "_" + std::string{ scene->mMeshes[meshIndex]->mName.C_Str() };
-		return matname;
-	}
-
 	std::string AssimpMaterialName(const aiScene* scene, int materialIndex)
 	{
 		std::string matname = "MAT_" + std::to_string(materialIndex) + "_" + std::string{ scene->mMaterials[materialIndex]->GetName().C_Str() };
@@ -95,82 +89,7 @@ namespace
 			AssetFile newFile = PackMaterial(&newMaterial);
 
 			//save to disk
-			SaveBinaryFile(materialPath.string().c_str(), newFile);
-		}
-		return true;
-	}
-
-	bool ConvertAssimpMesh(const aiScene* scene, const fs::path& input, const fs::path& outputFolder, const fs::path& rootPath)
-	{
-		for (unsigned int meshindex = 0; meshindex < scene->mNumMeshes; meshindex++) {
-
-			auto mesh = scene->mMeshes[meshindex];
-
-			auto VertexFormatEnum = VertexFormat::P32N32C32V32;
-			using VertexFormatType = Vertex_P32N32C32V32;
-
-			std::vector<VertexFormatType> _vertices;
-			std::vector<uint32_t> _indices;
-
-			std::string meshname = AssimpMeshName(scene, meshindex);
-
-			_vertices.resize(mesh->mNumVertices);
-			for (unsigned int v = 0; v < mesh->mNumVertices; v++)
-			{
-				VertexFormatType vert;
-				vert.position[0] = mesh->mVertices[v].x;
-				vert.position[1] = mesh->mVertices[v].y;
-				vert.position[2] = mesh->mVertices[v].z;
-
-				vert.normal[0] = mesh->mNormals[v].x;
-				vert.normal[1] = mesh->mNormals[v].y;
-				vert.normal[2] = mesh->mNormals[v].z;
-
-				if (mesh->GetNumUVChannels() >= 1)
-				{
-					vert.uv[0] = mesh->mTextureCoords[0][v].x;
-					vert.uv[1] = mesh->mTextureCoords[0][v].y;
-				}
-				else {
-					vert.uv[0] = 0;
-					vert.uv[1] = 0;
-				}
-				if (mesh->HasVertexColors(0))
-				{
-					vert.colour[0] = mesh->mColors[0][v].r;
-					vert.colour[1] = mesh->mColors[0][v].g;
-					vert.colour[2] = mesh->mColors[0][v].b;
-				}
-				else {
-					vert.colour[0] = 1;
-					vert.colour[1] = 1;
-					vert.colour[2] = 1;
-				}
-
-				_vertices[v] = vert;
-			}
-			_indices.resize(mesh->mNumFaces * 3);
-			for (unsigned int f = 0; f < mesh->mNumFaces; f++)
-			{
-				_indices[f * 3 + 0] = mesh->mFaces[f].mIndices[0];
-				_indices[f * 3 + 1] = mesh->mFaces[f].mIndices[1];
-				_indices[f * 3 + 2] = mesh->mFaces[f].mIndices[2];
-			}
-
-			MeshInfo meshinfo;
-			meshinfo.vertexFormat = VertexFormatEnum;
-			meshinfo.vertexBuferSize = _vertices.size() * sizeof(VertexFormatType);
-			meshinfo.indexBuferSize = _indices.size() * sizeof(uint32_t);
-			meshinfo.vertexSize = sizeof(VertexFormatType);
-			meshinfo.indexSize = sizeof(uint32_t);
-			meshinfo.originalFile = GetRelativePathFrom(input, rootPath.string()).string();
-
-			AssetFile newFile = PackMesh(&meshinfo, (char*)_vertices.data(), (char*)_indices.data());
-
-			fs::path meshpath = outputFolder / (meshname + ".mesh");
-
-			//save to disk
-			SaveBinaryFile(meshpath.string().c_str(), newFile);
+			newFile.SaveBinaryFile(materialPath.string().c_str());
 		}
 		return true;
 	}
@@ -184,70 +103,64 @@ namespace
 		std::array<float, 16> identityMatrix;
 		memcpy(&identityMatrix, &ident, sizeof(glm::mat4));
 
-
 		uint64_t lastNode = 0;
-		std::function<void(aiNode* node, aiMatrix4x4& parentmat, uint64_t)> process_node = [&](aiNode* node, aiMatrix4x4& parentmat, uint64_t parentID) {
-
+		std::function<void(aiNode* node, aiMatrix4x4& parentmat, uint64_t)> process_node = [&](aiNode* node, aiMatrix4x4& parentmat, uint64_t parentID) 
+		{
 			aiMatrix4x4 node_mat = /*parentmat * */node->mTransformation;
-
-			glm::mat4 modelmat;
-			for (int y = 0; y < 4; y++)
-			{
-				for (int x = 0; x < 4; x++)
-				{
-					modelmat[y][x] = node_mat[x][y];
-				}
-			}
 
 			uint64_t nodeindex = lastNode;
 			lastNode++;
 
-			std::array<float, 16> matrix;
-			memcpy(&matrix, &modelmat, sizeof(glm::mat4));
+			if(parentID > 0)
+				model.meshParents[nodeindex] = parentID;
 
-			if (parentID != nodeindex)
+			model.meshNames.emplace_back(node->mName.C_Str());
+			model.transformMatrix.emplace_back(*reinterpret_cast<Mat4x4*>(&node->mTransformation));
+
+			for (unsigned int msh = 0; msh < node->mNumMeshes; msh++)
 			{
-				model.node_parents[nodeindex] = parentID;
-			}
+				Mesh mesh;
+				mesh.vertexBuffer.inputTypes =
+				{
+					VertexDataType::PositionFloat3,
+					VertexDataType::NormalFloat3,
+					VertexDataType::TexCoordFloat2
+				};
+				mesh.vertexBuffer.interleaved = true;
+				uint32_t stride = mesh.vertexBuffer.GetStride();
 
-			model.node_matrices[nodeindex] = model.matrices.size();
-			model.matrices.push_back(matrix);
+				auto aiMesh = scene->mMeshes[msh];
 
+				mesh.vertexBuffer.data.resize(aiMesh->mNumVertices * stride);
+				for (unsigned int v = 0; v < aiMesh->mNumVertices; v++)
+				{
+					size_t index = v * stride;
+					memcpy(&mesh.vertexBuffer.data[index], &aiMesh->mVertices[v], sizeof(float) * 3);
+					index += 3;
 
-			std::string nodename = node->mName.C_Str();
-			//std::cout << nodename << std::endl;
+					memcpy(&mesh.vertexBuffer.data[index], &aiMesh->mNormals[v], sizeof(float) * 3);
+					index += 3;
 
-			if (nodename.size() > 0)
-			{
-				model.node_names[nodeindex] = nodename;
-			}
-			for (unsigned int msh = 0; msh < node->mNumMeshes; msh++) {
+					if (aiMesh->GetNumUVChannels() >= 1)
+					{
+						memcpy(&mesh.vertexBuffer.data[index], &aiMesh->mTextureCoords[0][v], sizeof(float) * 2);
+						index += 2;
+					}
+					else {
+						mesh.vertexBuffer.data.at(index++) = 0;
+						mesh.vertexBuffer.data.at(index++) = 0;
+					}
+				}
 
-				int mesh_index = node->mMeshes[msh];
-				std::string meshname = "Mesh: " + std::string{ scene->mMeshes[mesh_index]->mName.C_Str() };
+				mesh.indexBuffer.resize(aiMesh->mNumFaces * 3);
+				for (unsigned int f = 0; f < aiMesh->mNumFaces; f++)
+				{
+					mesh.indexBuffer[f * 3 + 0] = aiMesh->mFaces[f].mIndices[0];
+					mesh.indexBuffer[f * 3 + 1] = aiMesh->mFaces[f].mIndices[1];
+					mesh.indexBuffer[f * 3 + 2] = aiMesh->mFaces[f].mIndices[2];
+				}
 
-				//std::cout << meshname << std::endl;
-
-				std::string matname = AssimpMaterialName(scene, scene->mMeshes[mesh_index]->mMaterialIndex);
-				meshname = AssimpMeshName(scene, mesh_index);
-
-				fs::path materialpath = (outputFolder.string() + "_materials/" + matname + ".mat");
-				fs::path meshpath = (outputFolder.string() + "_meshes/" + meshname + ".mesh");
-
-				materialpath = GetRelativePathFrom(materialpath, rootPath.string());
-				meshpath = GetRelativePathFrom(meshpath, rootPath.string());
-
-
-				ModelInfo::NodeMesh nmesh;
-				nmesh.mesh_path = meshpath.string();
-				nmesh.material_path = materialpath.string();
-				uint64_t newNode = lastNode; lastNode++;
-
-				model.node_meshes[newNode] = nmesh;
-				model.node_parents[newNode] = nodeindex;
-
-				model.node_matrices[newNode] = model.matrices.size();
-				model.matrices.push_back(identityMatrix);
+				model.meshes.emplace_back(std::move(mesh));
 			}
 
 			for (unsigned int ch = 0; ch < node->mNumChildren; ch++)
@@ -276,7 +189,7 @@ namespace
 		scenefilepath.replace_extension(".modl");
 
 		//save to disk
-		SaveBinaryFile(scenefilepath.string().c_str(), newFile);
+		newFile.SaveBinaryFile(scenefilepath.string().c_str());
 		return true;
 	}
 
@@ -297,14 +210,11 @@ bool ConvertMesh(const fs::path& input, const fs::path& outputFolder, const fs::
 
 	fs::path outputDir = outputFolder;
 	outputDir.replace_extension();
-	const fs::path meshDir = outputDir.string() + "_meshes";
 	const fs::path materialDir = outputDir.string() + "_materials";
 
-	fs::create_directories(meshDir);
 	fs::create_directories(materialDir);
 
-	bool success = ConvertAssimpMesh(scene, input, meshDir, rootPath);
-	success = ConvertAssimpMaterials(scene, input, materialDir, rootPath);
+	bool success = ConvertAssimpMaterials(scene, input, materialDir, rootPath);
 	success = ConvertNodes(scene, input, outputDir, rootPath);
 	return success;
 }

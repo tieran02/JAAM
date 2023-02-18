@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include "core/assetBuffer.h"
 
 namespace Asset
 {
@@ -16,17 +17,12 @@ namespace Asset
 		uint32_t version;
 		uint16_t checksum;
 		std::string json;
-		std::vector<char> binaryBlob;
-	};
+		//std::vector<char> binaryBlob;
+		Buffer binaryBlob;
 
-	enum class CompressionMode : uint32_t 
-	{
-		None,
-		LZ4
+		bool SaveBinaryFile(const char* path);
+		bool LoadBinaryFile(const char* path);
 	};
-
-	bool SaveBinaryFile(const char* path, const AssetFile& file);
-	bool LoadBinaryFile(const char* path, AssetFile& outputFile);
 
 	CompressionMode ParseCompression(const char* f);
 }

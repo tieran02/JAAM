@@ -4,25 +4,46 @@
 
 namespace Asset
 {
-	struct ModelInfo 
+	enum class VertexDataType : uint16_t
 	{
-		//points to matrix array in the blob
-		std::unordered_map<uint64_t, int> node_matrices;
-		std::unordered_map<uint64_t, std::string> node_names;
+		PositionFloat2,
+		PositionFloat3,
+		NormalFloat3,
+		ColorFloat2,
+		ColorFloat3,
+		TexCoordFloat2,
+	};
 
-		std::unordered_map<uint64_t, uint64_t> node_parents;
+	struct VertexBuffer
+	{
+		std::vector<VertexDataType> inputTypes;
+		bool interleaved;
 
-		struct NodeMesh {
-			std::string material_path;
-			std::string mesh_path;
-		};
+		std::vector<uint8_t> data;
+		uint32_t GetStride() const;
+	};
 
-		std::unordered_map<uint64_t, NodeMesh> node_meshes;
+	typedef std::vector<uint32_t> IndexBuffer;
+	typedef std::array<float, 16> Mat4x4;
 
-		std::vector<std::array<float, 16>> matrices;
+	struct Mesh
+	{
+		VertexBuffer vertexBuffer;
+		IndexBuffer indexBuffer;
 	};
 
 
-	ModelInfo ReadModelInfo(AssetFile* file);
+	struct ModelInfo 
+	{
+		std::vector<std::string> meshNames;
+		std::unordered_map<uint64_t, uint64_t> meshParents;  //Key = Mesh to get the parent for, Value = ParentId
+
+		//Binary members
+		std::vector<Mat4x4> transformMatrix;
+		std::vector<Mesh> meshes;
+	};
+
+
+	ModelInfo ReadModelInfo(const AssetFile& file);
 	AssetFile PackModel(const ModelInfo& info);
 }

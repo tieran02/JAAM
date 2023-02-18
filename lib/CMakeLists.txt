@@ -30,6 +30,7 @@ target_sources(lz4 PRIVATE
 
 target_include_directories(JAAMLib SYSTEM PRIVATE ${CMAKE_SOURCE_DIR}/vendor/src/lz4/lib)
 target_include_directories(JAAMLib SYSTEM PRIVATE ${CMAKE_SOURCE_DIR}/vendor/src/json/include)
+target_include_directories(JAAMLib SYSTEM PRIVATE ${CMAKE_SOURCE_DIR}/vendor/src/magic_enum/include)
 
 target_link_libraries(JAAMLib PRIVATE lz4 nlohmann_json)
 

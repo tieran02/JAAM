@@ -11,63 +11,57 @@ AssetFile::AssetFile() :
 
 }
 
-bool Asset::SaveBinaryFile(const char* path, const AssetFile& file)
+bool AssetFile::SaveBinaryFile(const char* path)
 {
 	std::ofstream outfile;
 	outfile.open(path, std::ios::binary | std::ios::out);
 
-	outfile.write(file.type.data(), 4);
-	uint32_t version = file.version;
+	outfile.write(type.data(), type.size());
+
 	//version
-	outfile.write((const char*)&version, sizeof(uint32_t));
+	outfile.write(reinterpret_cast<const char*>(&version), sizeof(version));
 
-	uint16_t checksum = file.checksum;
 	//checksum
-	outfile.write((const char*)&checksum, sizeof(uint16_t));
+	outfile.write(reinterpret_cast<const char*>(&checksum), sizeof(checksum));
 
-	//json length
-	uint32_t length = static_cast<uint32_t>(file.json.size());
-	outfile.write((const char*)&length, sizeof(uint32_t));
+	//json
+	size_t jsonSize = json.size();
+	outfile.write(reinterpret_cast<const char*>(&jsonSize), sizeof(jsonSize));
+	outfile.write(reinterpret_cast<const char*>(json.data()), jsonSize);
 
-	//blob length
-	uint32_t bloblength = static_cast<uint32_t>(file.binaryBlob.size());
-	outfile.write((const char*)&bloblength, sizeof(uint32_t));
-
-	//json stream
-	outfile.write(file.json.data(), length);
 	//blob data
-	outfile.write(file.binaryBlob.data(), file.binaryBlob.size());
+	outfile << binaryBlob;
 
 	outfile.close();
 
 	return true;
 }
 
-bool Asset::LoadBinaryFile(const char* path, AssetFile& outputFile)
+bool AssetFile::LoadBinaryFile(const char* path)
 {
 	std::ifstream infile;
-	infile.open(path, std::ios::binary);
+	infile.open(path, std::ios::binary | std::ios::in);
 
 	if (!infile.is_open()) return false;
 
 	//move file cursor to beginning
-	infile.seekg(0);
+	//infile.seekg(0);
 
-	infile.read(outputFile.type.data(), 4);
-	infile.read((char*)&outputFile.version, sizeof(uint32_t));
-	infile.read((char*)&outputFile.checksum, sizeof(uint16_t));
+	infile.read(type.data(), type.size());
 
-	uint32_t jsonlen = 0;
-	infile.read((char*)&jsonlen, sizeof(uint32_t));
+	//version
+	infile.read(reinterpret_cast<char*>(&version), sizeof(version));
 
-	uint32_t bloblen = 0;
-	infile.read((char*)&bloblen, sizeof(uint32_t));
+	//checksum
+	infile.read(reinterpret_cast<char*>(&checksum), sizeof(checksum));
 
-	outputFile.json.resize(jsonlen);
-	infile.read(outputFile.json.data(), jsonlen);
+	size_t jsonSize = 0;
+	infile.read(reinterpret_cast<char*>(&jsonSize), sizeof(jsonSize));
+	json.resize(jsonSize);
+	infile.read(reinterpret_cast<char*>(json.data()), jsonSize);
 
-	outputFile.binaryBlob.resize(bloblen);
-	infile.read(outputFile.binaryBlob.data(), bloblen);
+	//blob data
+	infile >> binaryBlob;
 
 	return true;
 }

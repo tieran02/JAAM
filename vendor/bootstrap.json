@@ -37,5 +37,13 @@
 			"url": "https://github.com/nlohmann/json",
 			"revision": "v3.11.2"
 		}
+	},
+	{
+		"name": "magic_enum",
+		"source": {
+			"type": "git",
+			"url": "https://github.com/Neargye/magic_enum.git",
+			"revision": "v0.8.2"
+		}
 	}
 ]

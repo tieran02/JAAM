@@ -14,11 +14,11 @@
 
 #include "util.h"
 #include "modelConverter.h"
-
 using namespace Asset;
 
 
 static uint16_t textureChecksum = 0;
+
 
 bool ConvertImage(const fs::path& input, const fs::path& output, const fs::path& rootPath)
 {
@@ -44,7 +44,7 @@ bool ConvertImage(const fs::path& input, const fs::path& output, const fs::path&
 
 	stbi_image_free(pixels);
 
-	SaveBinaryFile(output.string().c_str(), newImage);
+	newImage.SaveBinaryFile(output.string().c_str());
 
 	return true;
 }
@@ -55,34 +55,37 @@ int main(int argc, char** argv)
 	AssetHandle textureHandle = textureManager.Load("data/models/sponza/textures/background.tx");
 	AssetHandle textureHandleLoad1 = textureManager.Load("data/models/sponza/textures/background.tx");
 
-	//for (int i = 0; i < argc; ++i)
-	//	std::cout << argv[i] << '\n';
+	Asset::TextureInfo* get = textureManager.Get(textureHandle);
+	std::cout << (int)get->textureFormat;
 
-	//const fs::path path{ argv[1] };
-	//const fs::path output{ argv[2] };
+	for (int i = 0; i < argc; ++i)
+		std::cout << argv[i] << '\n';
 
-	//std::cout << "loading asset directory at " << path << std::endl;
+	const fs::path path{ argv[1] };
+	const fs::path output{ argv[2] };
 
-	//for (auto& p : fs::recursive_directory_iterator(path))
-	//{
-	//	const fs::path rootPath = path.filename();
-	//	fs::path newpath = ChangeRoot(path, output, p.path());
-	//	fs::path newdir = newpath;
+	std::cout << "loading asset directory at " << path << std::endl;
 
-	//	fs::create_directories(newdir.remove_filename());
+	for (auto& p : fs::recursive_directory_iterator(path))
+	{
+		const fs::path rootPath = path.filename();
+		fs::path newpath = ChangeRoot(path, output, p.path());
+		fs::path newdir = newpath;
 
-	//	if (p.path().extension() == ".png") {
-	//		std::cout << "found a texture" << p << std::endl;
+		fs::create_directories(newdir.remove_filename());
 
-	//		newpath.replace_extension(".tx");
-	//		ConvertImage(p.path(), newpath, rootPath);
-	//	}
-	//	if (p.path().extension() == ".obj")
-	//	{
-	//		std::cout << "found a mesh" << p << std::endl;
+		if (p.path().extension() == ".png") {
+			std::cout << "found a texture" << p << std::endl;
 
-	//		newpath.replace_extension(".mesh");
-	//		ConvertMesh(p.path(), newpath, rootPath);
-	//	}
-	//}
+			newpath.replace_extension(".tx");
+			ConvertImage(p.path(), newpath, rootPath);
+		}
+		if (p.path().extension() == ".obj")
+		{
+			std::cout << "found a mesh" << p << std::endl;
+
+			newpath.replace_extension(".mesh");
+			ConvertMesh(p.path(), newpath, rootPath);
+		}
+	}
 }

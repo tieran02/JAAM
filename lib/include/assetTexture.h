@@ -1,11 +1,12 @@
 #pragma once
 #include "assetFile.h"
+#include "nlohmann/json.hpp"
 
 namespace Asset
 {
-	enum class TextureFormat : uint32_t
+	enum class TextureFormat
 	{
-		Unknown = 0,
+		Unknown,
 		RGBA8
 	};
 
@@ -16,14 +17,12 @@ namespace Asset
 
 		int textureSize;
 		TextureFormat textureFormat;
-		CompressionMode compressionMode;
 		std::array<uint32_t, 3> pixelsize; //[0] width [1] height [2] depth
 		std::string originalFile;
 
-		std::vector<char*> data;
+		std::vector<uint8_t> data;
 	};
 
 	TextureInfo ReadTextureInfo(const AssetFile& assetFile);
-	void UnpackTexture(TextureInfo* info, const char* sourcebuffer, int sourceSize, char* destination);
 	AssetFile PackTexture(TextureInfo* info, void* pixelData);
 }
