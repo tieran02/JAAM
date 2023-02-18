@@ -5,6 +5,7 @@ using namespace Asset;
 namespace Asset 
 {
 	AssetHandle InvalidHandle(std::numeric_limits<uint16_t>::max(), std::numeric_limits<uint16_t>::max(), nullptr);
+
 }
 
 AssetHandle::AssetHandle(HandleIndex index, HandleChecksum checksum, BaseAssetManager* assetManager) : m_manager(assetManager)
@@ -12,7 +13,7 @@ AssetHandle::AssetHandle(HandleIndex index, HandleChecksum checksum, BaseAssetMa
 	m_handle.m_index = index;
 	m_handle.m_checksum = checksum;
 	
-	if(m_manager)
+	if (IsValid() && m_manager)
 		m_manager->Reference(index);
 }
 
@@ -21,13 +22,22 @@ AssetHandle::AssetHandle(const AssetHandle& otherHandle)
 	m_value = otherHandle.Value();
 	m_manager = otherHandle.m_manager;
 
-	if (m_manager)
+	if (IsValid() && m_manager)
 		m_manager->Reference(m_handle.m_index);
 }
 
+AssetHandle::AssetHandle(AssetHandle&& otherHandle)
+{
+	m_value = otherHandle.Value();
+	m_manager = otherHandle.m_manager;
+
+	otherHandle.SetInvalid();
+}
+
+
 AssetHandle::~AssetHandle()
 {
-	if (m_manager)
+	if (IsValid() && m_manager)
 		m_manager->Dereference(m_handle.m_index);
 }
 
@@ -49,5 +59,10 @@ HandleChecksum AssetHandle::Checksum() const
 bool AssetHandle::IsValid() const
 {
 	return *this != InvalidHandle;
+}
+
+void AssetHandle::SetInvalid()
+{
+	m_value = InvalidHandle.Value();
 }
 

@@ -8,5 +8,8 @@
 
 namespace Asset
 {
-	typedef AssetManager < TextureInfo, FileType{ 'T','E','X','I' } > TextureManager;
+	struct EmptyUserData {};
+
+	template <typename T>
+	using TextureManager = AssetManager<TextureInfo, T>;
 }

@@ -21,12 +21,14 @@ namespace Asset
 		AssetHandle(HandleIndex index, HandleChecksum checksum, BaseAssetManager* assetManager);
 		~AssetHandle();
 		AssetHandle(const AssetHandle& otherHandle);
+		AssetHandle(AssetHandle&& otherHandle);
 
 		HandleValue Value() const;
 		HandleIndex Index() const;
 		HandleChecksum Checksum() const;
 
 		bool IsValid() const;
+		void SetInvalid();
 
 		bool operator==(const AssetHandle& rhs)
 		{
