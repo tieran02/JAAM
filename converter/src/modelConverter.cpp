@@ -118,6 +118,7 @@ namespace
 
 			model.transformMatrix.emplace_back(*reinterpret_cast<Mat4x4*>(&node->mTransformation));
 
+			//TODO treat each mesh as a child node to the parent
 			for (unsigned int msh = 0; msh < node->mNumMeshes; msh++)
 			{
 				Mesh mesh;

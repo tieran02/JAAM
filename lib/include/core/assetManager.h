@@ -49,26 +49,26 @@ namespace Asset
 
 		void Release(HandleIndex index) override;
 
-		void SetOnLoadCallback(std::function<void(const T&, UserT&)> onLoadCallback);
-		void SetOnUnloadCallback(std::function<void(const T&, UserT&)> onUnloadCallback);
+		void SetOnLoadCallback(std::function<void(T&, UserT&)> onLoadCallback);
+		void SetOnUnloadCallback(std::function<void(T&, UserT&)> onUnloadCallback);
 
 	private:
 		std::vector<T> m_data;
 		std::vector<UserT> m_userData;
 		FileType fileType;
 
-		std::function<void(const T&, UserT&)> m_onLoadCallback;
-		std::function<void(const T&, UserT&)> m_onUnloadCallback;
+		std::function<void(T&, UserT&)> m_onLoadCallback;
+		std::function<void(T&, UserT&)> m_onUnloadCallback;
 	};
 
 	template <typename T, typename UserT>
-	void Asset::AssetManager<T, UserT>::SetOnUnloadCallback(std::function<void(const T&, UserT&)> onUnloadCallback)
+	void Asset::AssetManager<T, UserT>::SetOnUnloadCallback(std::function<void(T&, UserT&)> onUnloadCallback)
 	{
 		m_onUnloadCallback = onUnloadCallback;
 	}
 
 	template <typename T, typename UserT>
-	void Asset::AssetManager<T, UserT>::SetOnLoadCallback(std::function<void(const T&, UserT&)> onLoadCallback)
+	void Asset::AssetManager<T, UserT>::SetOnLoadCallback(std::function<void(T&, UserT&)> onLoadCallback)
 	{
 		m_onLoadCallback = onLoadCallback;
 	}
