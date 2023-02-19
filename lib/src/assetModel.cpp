@@ -8,48 +8,128 @@ namespace
 {
 	size_t GetMeshDataSize(const std::vector<Mesh>& meshes)
 	{
-		return std::accumulate(meshes.begin(), meshes.end(), size_t(0), [](size_t sum, const Mesh& mesh) -> size_t
+		size_t size = sizeof(size_t); //Store the mesh count
+
+		size += std::accumulate(meshes.begin(), meshes.end(), size_t(0), [](size_t sum, const Mesh& mesh) -> size_t
 		{
 			return sum +
 			sizeof(uint8_t) + // input element count
 			sizeof(VertexDataType) * mesh.vertexBuffer.inputTypes.size() +
 			sizeof(bool) + // interleaved
 			sizeof(uint64_t) + // vertex buffer size;
-			mesh.vertexBuffer.data.size();
+			mesh.vertexBuffer.data.size() +
+			sizeof(uint64_t) + // index buffer size;
+			mesh.indexBuffer.size() * sizeof(uint32_t); //index is a 32bit uint
 		});
+
+		return size;
 	}
 
 	void PackMeshData(const std::vector<Mesh>& meshes, std::vector<char>& binaryBlob, size_t startIndex)
 	{
+		uint32_t meshCount = static_cast<uint32_t>(meshes.size());
+
+		memcpy(&binaryBlob[startIndex], &meshCount, sizeof(meshCount));
+		startIndex += sizeof(meshCount);
+
 		for (int i = 0; i < meshes.size(); ++i)
 		{
 			const Mesh& mesh = meshes[i];
 
 			size_t srcIndex = startIndex;
+
 			//pack input types
-			binaryBlob[srcIndex] = static_cast<uint8_t>(mesh.vertexBuffer.inputTypes.size());
+			uint8_t inputTypeCount = static_cast<uint8_t>(mesh.vertexBuffer.inputTypes.size());
+			memcpy(&binaryBlob[srcIndex], &inputTypeCount, sizeof(inputTypeCount));
 			srcIndex += sizeof(uint8_t);
 
 			memcpy(&binaryBlob[srcIndex], mesh.vertexBuffer.inputTypes.data(), sizeof(VertexDataType) * mesh.vertexBuffer.inputTypes.size());
 			srcIndex += sizeof(VertexDataType) * mesh.vertexBuffer.inputTypes.size();
 
 			//interleaved
-			binaryBlob[srcIndex] = mesh.vertexBuffer.interleaved;
+			memcpy(&binaryBlob[srcIndex], &mesh.vertexBuffer.interleaved, sizeof(bool));
 			srcIndex += sizeof(bool);
 
 			//vertex data
-			uint64_t vertexCount = mesh.vertexBuffer.data.size();
-			memcpy(&binaryBlob[srcIndex], &vertexCount, sizeof(uint64_t));
-			srcIndex += sizeof(uint64_t);
+			uint32_t vertexCount = static_cast<uint32_t>(mesh.vertexBuffer.data.size());
+			memcpy(&binaryBlob[srcIndex], &vertexCount, sizeof(uint32_t));
+			srcIndex += sizeof(uint32_t);
 
 
 			memcpy(&binaryBlob[srcIndex], mesh.vertexBuffer.data.data(), mesh.vertexBuffer.data.size());
 			srcIndex += mesh.vertexBuffer.data.size();
 
+			//index data
+			uint32_t indexCount = static_cast<uint32_t>(mesh.indexBuffer.size());
+			memcpy(&binaryBlob[srcIndex], &indexCount, sizeof(uint32_t));
+			srcIndex += sizeof(uint32_t);
+
+
+			memcpy(&binaryBlob[srcIndex], mesh.indexBuffer.data(), mesh.indexBuffer.size() * sizeof(uint32_t));
+			srcIndex += mesh.indexBuffer.size() * sizeof(uint32_t);
+
+		}
+	}
+
+	void ReadMeshData(ModelInfo& info, std::vector<char>& binaryBlob, size_t startIndex)
+	{
+		uint32_t meshCount = 0;
+		memcpy(&meshCount, &binaryBlob[startIndex], sizeof(meshCount));
+		startIndex += sizeof(meshCount);
+
+		info.meshes.resize(meshCount);
+		for (uint32_t i = 0; i < meshCount; ++i)
+		{
+			Mesh& mesh = info.meshes[i];
+
+			size_t srcIndex = startIndex;
+
+			//pack input types
+			uint8_t inputTypeCount = 0;
+			memcpy(&inputTypeCount, &binaryBlob[srcIndex], sizeof(inputTypeCount));
+			mesh.vertexBuffer.inputTypes.resize(inputTypeCount);
+			srcIndex += sizeof(uint8_t);
+
+			memcpy(mesh.vertexBuffer.inputTypes.data(), &binaryBlob[srcIndex], sizeof(VertexDataType) * mesh.vertexBuffer.inputTypes.size());
+			srcIndex += sizeof(VertexDataType) * mesh.vertexBuffer.inputTypes.size();
+
+			//interleaved
+			memcpy(&mesh.vertexBuffer.interleaved, &binaryBlob[srcIndex], sizeof(bool));
+			srcIndex += sizeof(bool);
+
+			//vertex data
+			uint32_t vertexCount = 0;
+			memcpy(&vertexCount, &binaryBlob[srcIndex], sizeof(uint32_t));
+			mesh.vertexBuffer.data.resize(vertexCount);
+			srcIndex += sizeof(uint32_t);
+
+
+			memcpy(mesh.vertexBuffer.data.data(), &binaryBlob[srcIndex], mesh.vertexBuffer.data.size());
+			srcIndex += mesh.vertexBuffer.data.size();
+
+			//Read index data
+			uint32_t indexCount = 0;
+			memcpy(&indexCount, &binaryBlob[srcIndex], sizeof(uint32_t));
+			mesh.indexBuffer.resize(indexCount);
+			srcIndex += sizeof(uint32_t);
+
+
+			memcpy(mesh.indexBuffer.data(), &binaryBlob[srcIndex], mesh.indexBuffer.size() * sizeof(uint32_t));
+			srcIndex += mesh.indexBuffer.size() * sizeof(uint32_t);
+
 		}
 	}
 }
 
+ModelInfo::ModelInfo()
+{
+
+}
+
+ModelInfo::ModelInfo(const AssetFile& assetFile)
+{
+	*this = ReadModelInfo(assetFile);
+}
 
 ModelInfo Asset::ReadModelInfo(const AssetFile& file)
 {
@@ -63,7 +143,10 @@ ModelInfo Asset::ReadModelInfo(const AssetFile& file)
 	std::vector<char> tempBuffer(file.binaryBlob.TotalBufferSize());
 	file.binaryBlob.CopyTo(tempBuffer.data());
 
+	info.transformMatrix.resize(info.meshNames.size());
 	memcpy(info.transformMatrix.data(), tempBuffer.data(), info.transformMatrix.size() * sizeof(Mat4x4));
+
+	ReadMeshData(info, tempBuffer, info.transformMatrix.size() * sizeof(Mat4x4));
 
 	return info;
 }
@@ -126,4 +209,9 @@ uint32_t VertexBuffer::GetStride() const
 		assert(false); // type doesn't have a size
 		return sum;
 	});
+}
+
+size_t VertexBuffer::GetVertexCount() const
+{
+	return data.size() / GetStride();
 }

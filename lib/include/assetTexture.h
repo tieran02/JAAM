@@ -1,6 +1,5 @@
 #pragma once
 #include "assetFile.h"
-#include "nlohmann/json.hpp"
 
 namespace Asset
 {

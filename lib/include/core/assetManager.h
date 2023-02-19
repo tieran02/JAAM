@@ -10,6 +10,7 @@
 #include "assetHandle.h"
 #include "assetFile.h"
 #include "assetTexture.h"
+#include "assetModel.h"
 
 
 namespace Asset
@@ -79,6 +80,10 @@ namespace Asset
 		if (std::is_same<T, TextureInfo>::value)
 		{
 			fileType = FileType{ 'T','E','X','I' };
+		}
+		else if (std::is_same<T, ModelInfo>::value)
+		{
+			fileType = FileType{ 'M','O','D','L' };
 		}
 	}
 

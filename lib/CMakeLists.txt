@@ -20,17 +20,17 @@ target_compile_options(JAAMLib PRIVATE
 #add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/src/assimp)
 
 set(JSON_BuildTests OFF CACHE INTERNAL "")
-add_subdirectory(${CMAKE_SOURCE_DIR}/vendor/src/json nlohmann_json)
+add_subdirectory(../vendor/src/json nlohmann_json)
 
 add_library(lz4 STATIC)
 target_sources(lz4 PRIVATE 
-    "${CMAKE_SOURCE_DIR}/vendor/src/lz4/lib/lz4.h"
-    "${CMAKE_SOURCE_DIR}/vendor/src/lz4/lib/lz4.c"
+    "../vendor/src/lz4/lib/lz4.h"
+    "../vendor/src/lz4/lib/lz4.c"
 )
 
-target_include_directories(JAAMLib SYSTEM PRIVATE ${CMAKE_SOURCE_DIR}/vendor/src/lz4/lib)
-target_include_directories(JAAMLib SYSTEM PRIVATE ${CMAKE_SOURCE_DIR}/vendor/src/json/include)
-target_include_directories(JAAMLib SYSTEM PRIVATE ${CMAKE_SOURCE_DIR}/vendor/src/magic_enum/include)
+target_include_directories(JAAMLib SYSTEM PRIVATE ../vendor/src/lz4/lib)
+target_include_directories(JAAMLib SYSTEM PRIVATE ../vendor/src/json/include)
+target_include_directories(JAAMLib SYSTEM PRIVATE ../vendor/src/magic_enum/include)
 
 target_link_libraries(JAAMLib PRIVATE lz4 nlohmann_json)
 

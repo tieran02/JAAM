@@ -21,6 +21,7 @@ namespace Asset
 
 		std::vector<uint8_t> data;
 		uint32_t GetStride() const;
+		size_t GetVertexCount() const;
 	};
 
 	typedef std::vector<uint32_t> IndexBuffer;
@@ -35,6 +36,9 @@ namespace Asset
 
 	struct ModelInfo 
 	{
+		ModelInfo();
+		ModelInfo(const AssetFile& assetFile);
+
 		std::vector<std::string> meshNames;
 		std::unordered_map<uint64_t, uint64_t> meshParents;  //Key = Mesh to get the parent for, Value = ParentId
 		std::vector<std::string> meshMaterials;

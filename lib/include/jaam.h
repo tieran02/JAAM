@@ -1,3 +1,4 @@
+#pragma once
 #include "core/assetHandle.h"
 #include "core/assetManager.h"
 
@@ -13,4 +14,10 @@ namespace Asset
 
 	template <typename T>
 	using TextureManager = AssetManager<TextureInfo, T>;
+
+
+	using ModelManagerBasic = AssetManager<ModelInfo, EmptyUserData>;
+
+	template <typename T>
+	using ModelManager = AssetManager<ModelInfo, T>;
 }

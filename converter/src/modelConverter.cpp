@@ -142,15 +142,15 @@ namespace
 				{
 					size_t index = v * stride;
 					memcpy(&mesh.vertexBuffer.data[index], &aiMesh->mVertices[v], sizeof(float) * 3);
-					index += 3;
+					index += sizeof(float) * 3;
 
 					memcpy(&mesh.vertexBuffer.data[index], &aiMesh->mNormals[v], sizeof(float) * 3);
-					index += 3;
+					index += sizeof(float) * 3;
 
 					if (aiMesh->GetNumUVChannels() >= 1)
 					{
 						memcpy(&mesh.vertexBuffer.data[index], &aiMesh->mTextureCoords[0][v], sizeof(float) * 2);
-						index += 2;
+						index += sizeof(float) * 2;
 					}
 					else {
 						mesh.vertexBuffer.data.at(index++) = 0;
