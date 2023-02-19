@@ -37,6 +37,7 @@ namespace Asset
 	{
 		std::vector<std::string> meshNames;
 		std::unordered_map<uint64_t, uint64_t> meshParents;  //Key = Mesh to get the parent for, Value = ParentId
+		std::vector<std::string> meshMaterials;
 
 		//Binary members
 		std::vector<Mat4x4> transformMatrix;

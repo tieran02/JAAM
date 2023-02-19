@@ -57,6 +57,7 @@ ModelInfo Asset::ReadModelInfo(const AssetFile& file)
 	nlohmann::json model_metadata = nlohmann::json::parse(file.json);
 
 	info.meshNames = model_metadata["meshNames"];
+	info.meshMaterials = model_metadata["meshMaterials"];
 	info.meshParents = model_metadata["meshParents"];
 
 	std::vector<char> tempBuffer(file.binaryBlob.TotalBufferSize());
@@ -80,6 +81,7 @@ AssetFile Asset::PackModel(const ModelInfo& info)
 	file.version = 1;
 
 	model_metadata["meshNames"] = info.meshNames;
+	model_metadata["meshMaterials"] = info.meshMaterials;
 	model_metadata["meshParents"] = info.meshParents;
 
 	

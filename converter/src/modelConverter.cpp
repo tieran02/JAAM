@@ -115,6 +115,7 @@ namespace
 				model.meshParents[nodeindex] = parentID;
 
 			model.meshNames.emplace_back(node->mName.C_Str());
+
 			model.transformMatrix.emplace_back(*reinterpret_cast<Mat4x4*>(&node->mTransformation));
 
 			for (unsigned int msh = 0; msh < node->mNumMeshes; msh++)
@@ -130,6 +131,10 @@ namespace
 				uint32_t stride = mesh.vertexBuffer.GetStride();
 
 				auto aiMesh = scene->mMeshes[msh];
+
+				std::string matname = AssimpMaterialName(scene, aiMesh->mMaterialIndex);
+				fs::path materialpath = (outputFolder.string() + "_materials/" + matname + ".mat");
+				model.meshMaterials.emplace_back(materialpath.string());
 
 				mesh.vertexBuffer.data.resize(aiMesh->mNumVertices * stride);
 				for (unsigned int v = 0; v < aiMesh->mNumVertices; v++)
