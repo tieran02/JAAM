@@ -146,13 +146,14 @@ bool ConvertImage(const fs::path& input, const fs::path& output, const fs::path&
 
 int main(int argc, char** argv)
 {
-	/*Asset::TextureManagerBasic textureManager;
+	Asset::TextureManagerBasic textureManager;
 	AssetHandle textureHandle = textureManager.Load("data/models/sponza/textures/background.tx");
 	AssetHandle textureHandleLoad1 = textureManager.Load("data/models/sponza/textures/background.tx");
 
 	Asset::TextureInfo* get = textureManager.Get(textureHandle);
 	auto* userData = textureManager.GetUserData(textureHandle);
-	std::cout << (int)get->textureFormat;*/
+	if(get)
+		std::cout << (int)get->textureFormat;
 
 	int num_threads = std::thread::hardware_concurrency();
 	std::cout << "number of threads = " << num_threads << std::endl;

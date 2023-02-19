@@ -130,7 +130,9 @@ namespace Asset
 
 		//Load asset File
 		AssetFile file;
-		file.LoadBinaryFile(uri.c_str());
+		if(!file.LoadBinaryFile(uri.c_str()))
+			return InvalidHandle;
+
 
 		//check if filetypes match
 		bool fileTypeMatch = !memcmp(file.type.data(), fileType.data(), fileType.size());
