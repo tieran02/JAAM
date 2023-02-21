@@ -109,18 +109,27 @@ namespace
 			aiMatrix4x4 node_mat = /*parentmat * */node->mTransformation;
 
 			uint64_t nodeindex = lastNode;
-			lastNode++;
 
-			if(parentID > 0)
-				model.meshParents[nodeindex] = parentID;
-
-			model.meshNames.emplace_back(node->mName.C_Str());
-
-			model.transformMatrix.emplace_back(*reinterpret_cast<Mat4x4*>(&node->mTransformation));
+			if (node->mNumMeshes == 0)
+				lastNode++;
 
 			//TODO treat each mesh as a child node to the parent
 			for (unsigned int msh = 0; msh < node->mNumMeshes; msh++)
 			{
+				nodeindex = lastNode;
+				lastNode++;
+
+				auto aiMesh = scene->mMeshes[node->mMeshes[msh]];
+
+
+				if (parentID > 0)
+					model.meshParents[nodeindex] = parentID;
+
+				std::string meshName = aiMesh->mName.length > 0 ? aiMesh->mName.C_Str() : "mesh_" + nodeindex + input.filename().string();
+				model.meshNames.emplace_back(node->mName.C_Str());
+
+				model.transformMatrix.emplace_back(*reinterpret_cast<Mat4x4*>(&node->mTransformation));
+
 				Mesh mesh;
 				mesh.vertexBuffer.inputTypes =
 				{
@@ -130,8 +139,6 @@ namespace
 				};
 				mesh.vertexBuffer.interleaved = true;
 				uint32_t stride = mesh.vertexBuffer.GetStride();
-
-				auto aiMesh = scene->mMeshes[msh];
 
 				std::string matname = AssimpMaterialName(scene, aiMesh->mMaterialIndex);
 				fs::path materialpath = (outputFolder.string() + "_materials/" + matname + ".mat");

@@ -32,11 +32,11 @@ namespace
 		memcpy(&binaryBlob[startIndex], &meshCount, sizeof(meshCount));
 		startIndex += sizeof(meshCount);
 
+		size_t srcIndex = startIndex;
+
 		for (int i = 0; i < meshes.size(); ++i)
 		{
 			const Mesh& mesh = meshes[i];
-
-			size_t srcIndex = startIndex;
 
 			//pack input types
 			uint8_t inputTypeCount = static_cast<uint8_t>(mesh.vertexBuffer.inputTypes.size());
@@ -78,11 +78,11 @@ namespace
 		startIndex += sizeof(meshCount);
 
 		info.meshes.resize(meshCount);
+		size_t srcIndex = startIndex;
+
 		for (uint32_t i = 0; i < meshCount; ++i)
 		{
 			Mesh& mesh = info.meshes[i];
-
-			size_t srcIndex = startIndex;
 
 			//pack input types
 			uint8_t inputTypeCount = 0;

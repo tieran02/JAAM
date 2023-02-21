@@ -10,14 +10,16 @@
 namespace Asset
 {
 	struct EmptyUserData {};
-	using TextureManagerBasic = AssetManager<TextureInfo, EmptyUserData>;
 
+	using TextureManagerBasic = AssetManager<TextureInfo, EmptyUserData>;
 	template <typename T>
 	using TextureManager = AssetManager<TextureInfo, T>;
 
-
 	using ModelManagerBasic = AssetManager<ModelInfo, EmptyUserData>;
-
 	template <typename T>
 	using ModelManager = AssetManager<ModelInfo, T>;
+
+	using MaterialManagerBasic = AssetManager<MaterialInfo, EmptyUserData>;
+	template <typename T>
+	using MaterialManager = AssetManager<MaterialInfo, T>;
 }

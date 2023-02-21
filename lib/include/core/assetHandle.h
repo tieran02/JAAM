@@ -30,7 +30,7 @@ namespace Asset
 		bool IsValid() const;
 		void SetInvalid();
 
-		bool operator==(const AssetHandle& rhs)
+		bool operator==(const AssetHandle& rhs) const
 		{
 			return Value() == rhs.Value();
 		}
@@ -48,7 +48,17 @@ namespace Asset
 
 		BaseAssetManager* m_manager;
 	};
-
 	
 	extern AssetHandle InvalidHandle;
+}
+
+namespace std
+{
+	template<> struct hash<Asset::AssetHandle>
+	{
+		std::size_t operator()(const Asset::AssetHandle& handle) const
+		{
+			return std::hash<Asset::HandleValue>()(handle.Value());
+		}
+	};
 }

@@ -11,6 +11,7 @@
 #include "assetFile.h"
 #include "assetTexture.h"
 #include "assetModel.h"
+#include "assetMaterial.h"
 
 
 namespace Asset
@@ -84,6 +85,10 @@ namespace Asset
 		else if (std::is_same<T, ModelInfo>::value)
 		{
 			fileType = FileType{ 'M','O','D','L' };
+		}
+		else if (std::is_same<T, MaterialInfo>::value)
+		{
+			fileType = FileType{ 'M','A','T','X' };
 		}
 	}
 
