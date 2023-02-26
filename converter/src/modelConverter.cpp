@@ -86,7 +86,7 @@ namespace
 
 			fs::path materialPath = outputFolder / (matname + ".mat");
 
-			AssetFile newFile = PackMaterial(&newMaterial);
+			AssetFile newFile = PackMaterial(newMaterial);
 
 			//save to disk
 			newFile.SaveBinaryFile(materialPath.string().c_str());

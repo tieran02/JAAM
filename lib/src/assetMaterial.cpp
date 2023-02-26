@@ -9,11 +9,16 @@ MaterialInfo::MaterialInfo()
 
 }
 
-MaterialInfo Asset::ReadMaterialInfo(AssetFile* file)
+MaterialInfo::MaterialInfo(const AssetFile& assetFile)
+{
+	*this = ReadMaterialInfo(assetFile);
+}
+
+MaterialInfo Asset::ReadMaterialInfo(const AssetFile& file)
 {
 	MaterialInfo info;
 
-	nlohmann::json material_metadata = nlohmann::json::parse(file->json);
+	nlohmann::json material_metadata = nlohmann::json::parse(file.json);
 	info.baseEffect = material_metadata["baseEffect"];
 
 
@@ -41,13 +46,13 @@ MaterialInfo Asset::ReadMaterialInfo(AssetFile* file)
 	return info;
 }
 
-AssetFile Asset::PackMaterial(MaterialInfo* info)
+AssetFile Asset::PackMaterial(MaterialInfo& info)
 {
 	nlohmann::json material_metadata;
-	material_metadata["baseEffect"] = info->baseEffect;
-	material_metadata["textures"] = info->textures;
+	material_metadata["baseEffect"] = info.baseEffect;
+	material_metadata["textures"] = info.textures;
 
-	switch (info->transparency)
+	switch (info.transparency)
 	{
 	case TransparencyMode::Opaque:
 		material_metadata["transparency"] = "opaque";

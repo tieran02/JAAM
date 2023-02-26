@@ -187,7 +187,7 @@ int main(int argc, char** argv)
 				});
 			
 		}
-		if (p.path().extension() == ".obj")
+		if (p.path().extension() == ".obj" || p.path().extension() == ".gltf")
 		{
 			std::cout << "found a mesh" << p << std::endl;
 

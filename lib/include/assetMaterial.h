@@ -13,6 +13,7 @@ namespace Asset
 	struct MaterialInfo
 	{
 		MaterialInfo();
+		MaterialInfo(const AssetFile& assetFile);
 
 		std::string baseEffect;
 		std::unordered_map<std::string, std::string >textures; // name/type -> path
@@ -20,6 +21,6 @@ namespace Asset
 	};
 
 
-	MaterialInfo ReadMaterialInfo(AssetFile* file);
-	AssetFile PackMaterial(MaterialInfo* info);
+	MaterialInfo ReadMaterialInfo(const AssetFile& file);
+	AssetFile PackMaterial(MaterialInfo& info);
 }
