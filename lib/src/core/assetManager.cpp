@@ -51,7 +51,7 @@ bool BaseAssetManager::UriExists(const std::string& uri) const
 void BaseAssetManager::AddNew(HandleIndex index, const std::string& uri, uint16_t checkSum)
 {
 	m_uriMap.emplace(uri, index);
-	m_refCount.emplace(index, 0).first;
+	m_refCount.emplace(index, static_cast<uint16_t>(0));
 	m_checkSums.emplace(index, checkSum);
 }
 
