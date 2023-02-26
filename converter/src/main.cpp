@@ -19,6 +19,7 @@
 #include <functional>
 #include <mutex>
 #include <chrono>
+#include <unordered_set>
 
 using namespace Asset;
 
@@ -146,14 +147,20 @@ bool ConvertImage(const fs::path& input, const fs::path& output, const fs::path&
 
 int main(int argc, char** argv)
 {
-	Asset::TextureManagerBasic textureManager;
-	AssetHandle textureHandle = textureManager.Load("data/models/sponza/textures/background.tx");
-	AssetHandle textureHandleLoad1 = textureManager.Load("data/models/sponza/textures/background.tx");
+	std::unordered_set<std::string> textureExtensions =
+	{
+		".png",
+		".jpg",
+		".jpeg",
+		".bmp"
+	};
 
-	Asset::TextureInfo* get = textureManager.Get(textureHandle);
-	auto* userData = textureManager.GetUserData(textureHandle);
-	if(get)
-		std::cout << (int)get->textureFormat;
+	std::unordered_set<std::string> modelExtensions =
+	{
+		".obj",
+		".fbx",
+		".gltf"
+	};
 
 	int num_threads = std::thread::hardware_concurrency();
 	std::cout << "number of threads = " << num_threads << std::endl;
@@ -177,7 +184,7 @@ int main(int argc, char** argv)
 
 		fs::create_directories(newdir.remove_filename());
 
-		if (p.path().extension() == ".png") {
+		if (textureExtensions.find(p.path().extension().string()) != textureExtensions.end()) {
 			std::cout << "found a texture" << p << std::endl;
 
 			newpath.replace_extension(".tx");
@@ -187,7 +194,7 @@ int main(int argc, char** argv)
 				});
 			
 		}
-		if (p.path().extension() == ".obj" || p.path().extension() == ".gltf")
+		if (modelExtensions.find(p.path().extension().string()) != modelExtensions.end())
 		{
 			std::cout << "found a mesh" << p << std::endl;
 
