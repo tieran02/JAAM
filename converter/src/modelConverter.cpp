@@ -78,14 +78,18 @@ namespace
 			//force a default texture
 			else 
 			{
-				texPath = "Default";
+				//texPath = "Default";
 			}
-			fs::path baseColorPath = outputFolder.parent_path() / texPath;
 
-			baseColorPath.replace_extension(".tx");
-			baseColorPath = GetRelativePathFrom(baseColorPath, rootPath.string());
+			if(!texPath.empty())
+			{
+				fs::path baseColorPath = outputFolder.parent_path() / texPath;
 
-			newMaterial.textures["baseColor"] = baseColorPath.string();
+				baseColorPath.replace_extension(".tx");
+				baseColorPath = GetRelativePathFrom(baseColorPath, rootPath.string());
+
+				newMaterial.textures["baseColor"] = baseColorPath.string();
+			}
 
 			fs::path materialPath = outputFolder / (matname + ".mat");
 
