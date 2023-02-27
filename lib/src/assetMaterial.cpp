@@ -19,6 +19,7 @@ MaterialInfo Asset::ReadMaterialInfo(const AssetFile& file)
 	MaterialInfo info;
 
 	nlohmann::json material_metadata = nlohmann::json::parse(file.json);
+	info.name = material_metadata["name"];
 	info.baseEffect = material_metadata["baseEffect"];
 
 
@@ -49,6 +50,7 @@ MaterialInfo Asset::ReadMaterialInfo(const AssetFile& file)
 AssetFile Asset::PackMaterial(MaterialInfo& info)
 {
 	nlohmann::json material_metadata;
+	material_metadata["name"] = info.name;
 	material_metadata["baseEffect"] = info.baseEffect;
 	material_metadata["textures"] = info.textures;
 

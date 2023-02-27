@@ -20,11 +20,11 @@
 #include <mutex>
 #include <chrono>
 #include <unordered_set>
+#include <atomic>
 
 using namespace Asset;
 
-
-static uint16_t textureChecksum = 0;
+std::atomic<uint16_t> checksum = 0;
 
 namespace
 {
@@ -135,7 +135,7 @@ bool ConvertImage(const fs::path& input, const fs::path& output, const fs::path&
 	texinfo.textureFormat = TextureFormat::RGBA8;
 	texinfo.originalFile = GetRelativePathFrom(input, rootPath.string()).string();
 	AssetFile newImage = PackTexture(&texinfo, pixels);
-	newImage.checksum = textureChecksum++;
+	newImage.checksum = checksum++;
 
 	stbi_image_free(pixels);
 

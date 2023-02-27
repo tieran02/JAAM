@@ -15,6 +15,8 @@
 
 using namespace Asset;
 
+extern std::atomic<uint16_t> checksum;
+
 namespace
 {
 	std::string AssimpMaterialName(const aiScene* scene, int materialIndex)
@@ -29,6 +31,7 @@ namespace
 			std::string matname = AssimpMaterialName(scene, m);
 
 			MaterialInfo newMaterial;
+			newMaterial.name = scene->mMaterials[m]->GetName().C_Str();
 			newMaterial.baseEffect = "default";
 
 			aiMaterial* material = scene->mMaterials[m];
@@ -200,6 +203,8 @@ namespace
 		fs::path scenefilepath = (outputFolder.parent_path()) / input.stem();
 
 		scenefilepath.replace_extension(".modl");
+
+		newFile.checksum = checksum++;
 
 		//save to disk
 		newFile.SaveBinaryFile(scenefilepath.string().c_str());

@@ -15,6 +15,7 @@ namespace Asset
 		MaterialInfo();
 		MaterialInfo(const AssetFile& assetFile);
 
+		std::string name;
 		std::string baseEffect;
 		std::unordered_map<std::string, std::string >textures; // name/type -> path
 		TransparencyMode transparency;

@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <vector>
+#include <deque>
+#include <queue>
 #include <string>
 #include <unordered_map>
 #include <atomic>
@@ -25,15 +27,19 @@ namespace Asset
 		void Reference(HandleIndex index);
 		void Dereference(HandleIndex index);
 
-		void AddNew(HandleIndex index, const std::string& uri, uint16_t checkSum);
+		void AddNew(HandleIndex& index, const std::string& uri, uint16_t checkSum);
 		bool UriExists(const std::string& uri) const;
 		HandleIndex GetIndexFromUri(const std::string& uri) const;
 		HandleChecksum GetChecksumFromIndex(HandleIndex index) const;
 		HandleChecksum GetChecksumFromUri(const std::string& uri) const;
+
+		virtual void Increase(HandleIndex size);
 	private:
+		std::queue<HandleIndex> m_free;
+
 		std::unordered_map<std::string, HandleIndex> m_uriMap;
-		std::unordered_map<HandleIndex, std::atomic<uint16_t>> m_refCount;
-		std::unordered_map<HandleIndex, HandleChecksum> m_checkSums;
+		std::deque<std::atomic<uint16_t>> m_refCount;
+		std::vector<HandleChecksum> m_checkSums;
 		friend struct AssetHandle;
 	};
 
@@ -53,7 +59,8 @@ namespace Asset
 
 		void SetOnLoadCallback(std::function<void(T&, UserT&)> onLoadCallback);
 		void SetOnUnloadCallback(std::function<void(T&, UserT&)> onUnloadCallback);
-
+	protected:
+		void Increase(HandleIndex size) override;
 	private:
 		std::vector<T> m_data;
 		std::vector<UserT> m_userData;
@@ -62,6 +69,18 @@ namespace Asset
 		std::function<void(T&, UserT&)> m_onLoadCallback;
 		std::function<void(T&, UserT&)> m_onUnloadCallback;
 	};
+
+	template <typename T, typename UserT>
+	void Asset::AssetManager<T, UserT>::Increase(HandleIndex size)
+	{
+		BaseAssetManager::Increase(size);
+
+		const HandleIndex previousSize = static_cast<HandleIndex>(m_data.size());
+		const HandleIndex newSize = previousSize + size;
+
+		m_data.resize(newSize);
+		m_userData.resize(newSize);
+	}
 
 	template <typename T, typename UserT>
 	void Asset::AssetManager<T, UserT>::SetOnUnloadCallback(std::function<void(T&, UserT&)> onUnloadCallback)
@@ -151,11 +170,12 @@ namespace Asset
 			return InvalidHandle;
 
 
-		m_data.emplace_back(file);
+
 		HandleIndex index = static_cast<uint16_t>(m_data.size() - 1);
 		AddNew(index, uri, file.checksum);
 
-		m_userData.emplace_back();
+		m_data[index] = T(file);
+		//m_userData.emplace_back();
 
 		if (m_onLoadCallback)
 			m_onLoadCallback(m_data.at(index), m_userData.at(index));
@@ -170,8 +190,5 @@ namespace Asset
 			m_onUnloadCallback(m_data.at(index), m_userData.at(index));
 
 		BaseAssetManager::Release(index);
-
-		m_data.erase(m_data.begin() + index);
-		m_userData.erase(m_userData.begin() + index);
 	}
 }

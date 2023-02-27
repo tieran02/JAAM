@@ -10,20 +10,16 @@ BaseAssetManager::BaseAssetManager()
 
 void BaseAssetManager::Reference(HandleIndex index)
 {
-	auto it = m_refCount.find(index);
-	assert(it != m_refCount.end());
-
-	it->second++;
+	assert(index >= 0 && index < m_refCount.size()); // Index out of bounds
+	m_refCount[index]++;
 }
 
 void BaseAssetManager::Dereference(HandleIndex index)
 {
-	auto it = m_refCount.find(index);
-	assert(it != m_refCount.end());
+	assert(index >= 0 && index < m_refCount.size()); // Index out of bounds
+	m_refCount[index]--;
 
-	it->second--;
-
-	if (it->second <= 0)
+	if (m_refCount[index] <= 0)
 	{
 		Release(index);
 	}
@@ -36,11 +32,16 @@ void BaseAssetManager::Release(HandleIndex index)
 	assert(it != m_uriMap.end());
 	m_uriMap.erase(it);
 
-	//Remove the ref count from refCount map
-	m_refCount.erase(index);
+	//reset the ref count
+	assert(index >= 0 && index < m_refCount.size()); // Index out of bounds
+	m_refCount[index] = 0;
 
-	//Remove the checksum
-	m_checkSums.erase(index);
+	//reset the checksum
+	assert(index >= 0 && index < m_checkSums.size()); // Index out of bounds
+	m_checkSums[index] = std::numeric_limits<HandleChecksum>::max();
+
+	//add index back into the free queue
+	m_free.push(index);
 }
 
 bool BaseAssetManager::UriExists(const std::string& uri) const
@@ -48,11 +49,21 @@ bool BaseAssetManager::UriExists(const std::string& uri) const
 	return m_uriMap.find(uri) != m_uriMap.end();
 }
 
-void BaseAssetManager::AddNew(HandleIndex index, const std::string& uri, uint16_t checkSum)
+void BaseAssetManager::AddNew(HandleIndex& index, const std::string& uri, uint16_t checkSum)
 {
+	//check if there are any free spaces, if not increase size
+	if (m_free.empty())
+		Increase(16);
+
+	index = m_free.front();
+	m_free.pop();
+
 	m_uriMap.emplace(uri, index);
-	m_refCount.emplace(index, static_cast<uint16_t>(0));
-	m_checkSums.emplace(index, checkSum);
+
+	assert(index >= 0 && index < m_refCount.size()); // Index out of bounds
+	m_refCount[index] = 0;
+	assert(index >= 0 && index < m_checkSums.size()); // Index out of bounds
+	m_checkSums[index] = checkSum;
 }
 
 HandleIndex BaseAssetManager::GetIndexFromUri(const std::string& uri) const
@@ -64,12 +75,25 @@ HandleIndex BaseAssetManager::GetIndexFromUri(const std::string& uri) const
 
 HandleChecksum BaseAssetManager::GetChecksumFromIndex(HandleIndex index) const
 {
-	auto it = m_checkSums.find(index);
-	assert(it != m_checkSums.end());
-	return it->second;
+	assert(index >= 0 && index < m_checkSums.size()); // Index out of bounds
+	return m_checkSums[index];
 }
 
 Asset::HandleChecksum BaseAssetManager::GetChecksumFromUri(const std::string& uri) const
 {
 	return GetChecksumFromIndex(GetIndexFromUri(uri));
+}
+
+void BaseAssetManager::Increase(HandleIndex size)
+{
+	const HandleIndex previousSize = static_cast<HandleIndex>(m_refCount.size());
+	const HandleIndex newSize = previousSize + size;
+
+	m_refCount.resize(newSize);
+	m_checkSums.resize(newSize, std::numeric_limits<HandleChecksum>::max());
+
+	for (HandleIndex i = previousSize; i < newSize; ++i)
+	{
+		m_free.push(i);
+	}
 }
