@@ -48,7 +48,7 @@ namespace Asset
 	{
 	public:
 		AssetManager();
-		AssetHandle Load(const std::string& uri);
+		AssetHandle Load(const std::string& uri, bool keepFileData = true);
 
 		bool Exists(const AssetHandle& handle);
 		T* Get(const AssetHandle& handle);
@@ -57,17 +57,17 @@ namespace Asset
 
 		void Release(HandleIndex index) override;
 
-		void SetOnLoadCallback(std::function<void(T&, UserT&)> onLoadCallback);
-		void SetOnUnloadCallback(std::function<void(T&, UserT&)> onUnloadCallback);
+		void SetOnLoadCallback(std::function<void(const T&, UserT&)> onLoadCallback);
+		void SetOnUnloadCallback(std::function<void(UserT&)> onUnloadCallback);
 	protected:
 		void Increase(HandleIndex size) override;
 	private:
-		std::vector<T> m_data;
+		std::vector<std::unique_ptr<T>> m_data;
 		std::vector<UserT> m_userData;
 		FileType fileType;
 
-		std::function<void(T&, UserT&)> m_onLoadCallback;
-		std::function<void(T&, UserT&)> m_onUnloadCallback;
+		std::function<void(const T&, UserT&)> m_onLoadCallback;
+		std::function<void(UserT&)> m_onUnloadCallback;
 	};
 
 	template <typename T, typename UserT>
@@ -83,13 +83,13 @@ namespace Asset
 	}
 
 	template <typename T, typename UserT>
-	void Asset::AssetManager<T, UserT>::SetOnUnloadCallback(std::function<void(T&, UserT&)> onUnloadCallback)
+	void Asset::AssetManager<T, UserT>::SetOnUnloadCallback(std::function<void(UserT&)> onUnloadCallback)
 	{
 		m_onUnloadCallback = onUnloadCallback;
 	}
 
 	template <typename T, typename UserT>
-	void Asset::AssetManager<T, UserT>::SetOnLoadCallback(std::function<void(T&, UserT&)> onLoadCallback)
+	void Asset::AssetManager<T, UserT>::SetOnLoadCallback(std::function<void(const T&, UserT&)> onLoadCallback)
 	{
 		m_onLoadCallback = onLoadCallback;
 	}
@@ -127,7 +127,7 @@ namespace Asset
 			assert(valid);
 		}
 
-		return valid ? &m_data.at(handle.Index()) : nullptr;
+		return valid ? m_data.at(handle.Index()).get() : nullptr;
 	}
 
 	template <typename T, typename UserT>
@@ -150,7 +150,7 @@ namespace Asset
 	}
 
 	template <typename T, typename UserT>
-	AssetHandle Asset::AssetManager<T, UserT>::Load(const std::string& uri)
+	AssetHandle Asset::AssetManager<T, UserT>::Load(const std::string& uri, bool keepFileData)
 	{
 		if (UriExists(uri))
 		{
@@ -174,11 +174,13 @@ namespace Asset
 		HandleIndex index = static_cast<uint16_t>(m_data.size() - 1);
 		AddNew(index, uri, file.checksum);
 
-		m_data[index] = T(file);
-		//m_userData.emplace_back();
+		m_data[index] = std::make_unique<T>(file);
 
 		if (m_onLoadCallback)
-			m_onLoadCallback(m_data.at(index), m_userData.at(index));
+			m_onLoadCallback(*m_data.at(index).get(), m_userData.at(index));
+
+		if (!keepFileData)
+			m_data[index].reset();
 
 		return AssetHandle(index, file.checksum, this);
 	}
@@ -187,7 +189,7 @@ namespace Asset
 	void Asset::AssetManager<T, UserT>::Release(HandleIndex index)
 	{
 		if (m_onUnloadCallback)
-			m_onUnloadCallback(m_data.at(index), m_userData.at(index));
+			m_onUnloadCallback(m_userData.at(index));
 
 		BaseAssetManager::Release(index);
 	}
