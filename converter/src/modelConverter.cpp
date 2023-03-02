@@ -57,38 +57,61 @@ namespace
 				}
 			}
 
-			//check opacity
-			std::string texPath = "";
-			if (material->GetTextureCount(aiTextureType_DIFFUSE))
+
+			//Convert the assimp texture types to our own format and add them to the matieral
+			std::unordered_map<std::string, std::vector<aiTextureType>> textureTypeMap;
+			textureTypeMap.emplace("baseColor", std::vector<aiTextureType>
 			{
-				aiString assimppath;
-				material->GetTexture(aiTextureType_DIFFUSE, 0, &assimppath);
+				aiTextureType_DIFFUSE,
+				aiTextureType_BASE_COLOR 
+			});
 
-				fs::path texturePath = &assimppath.data[0];
-				texPath = texturePath.string();
-			}
-			else if (material->GetTextureCount(aiTextureType_BASE_COLOR))
+			textureTypeMap.emplace("spec", std::vector<aiTextureType>
 			{
-				aiString assimppath;
-				material->GetTexture(aiTextureType_BASE_COLOR, 0, &assimppath);
+				aiTextureType_SPECULAR,
+				aiTextureType_METALNESS
+			});
 
-				fs::path texturePath = &assimppath.data[0];
-				texPath = texturePath.string();
-			}
-			//force a default texture
-			else 
+			textureTypeMap.emplace("normal", std::vector<aiTextureType>
 			{
-				//texPath = "Default";
-			}
+				aiTextureType_NORMALS,
+				aiTextureType_NORMAL_CAMERA,
+			});
 
-			if(!texPath.empty())
+			textureTypeMap.emplace("alpha", std::vector<aiTextureType>
 			{
-				fs::path baseColorPath = outputFolder.parent_path() / texPath;
+				aiTextureType_OPACITY,
+			});
 
-				baseColorPath.replace_extension(".tx");
-				baseColorPath = GetRelativePathFrom(baseColorPath, rootPath.string());
 
-				newMaterial.textures["baseColor"] = baseColorPath.string();
+			for (const auto& textureType : textureTypeMap)
+			{
+				const std::string& typeName = textureType.first;
+
+				for (const auto& typeEnum : textureType.second)
+				{
+					//check opacity
+					std::string texPath = "";
+					if (material->GetTextureCount(typeEnum))
+					{
+						aiString assimppath;
+						material->GetTexture(typeEnum, 0, &assimppath);
+
+						fs::path texturePath = &assimppath.data[0];
+						texPath = texturePath.string();
+					}
+
+					if (!texPath.empty())
+					{
+						fs::path baseColorPath = outputFolder.parent_path() / texPath;
+
+						baseColorPath.replace_extension(".tx");
+						baseColorPath = GetRelativePathFrom(baseColorPath, rootPath.string());
+
+						newMaterial.textures[typeName] = baseColorPath.string();
+						break; //Texture found
+					}
+				}
 			}
 
 			fs::path materialPath = outputFolder / (matname + ".mat");
