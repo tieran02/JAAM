@@ -4,6 +4,7 @@
 
 using namespace Asset;
 
+
 MaterialInfo::MaterialInfo()
 {
 
@@ -27,6 +28,11 @@ MaterialInfo Asset::ReadMaterialInfo(const AssetFile& file)
 	{
 		info.textures[key] = value;
 	}
+
+	info.floatParamters = material_metadata["floatParamters"];
+	info.intParamters = material_metadata["intParamters"];
+	info.vec3Paramters = material_metadata["float3Paramters"];
+	info.vec4Paramters = material_metadata["float4Paramters"];
 
 	info.transparency = TransparencyMode::Opaque;
 	auto it = material_metadata.find("transparency");
@@ -53,6 +59,12 @@ AssetFile Asset::PackMaterial(MaterialInfo& info)
 	material_metadata["name"] = info.name;
 	material_metadata["baseEffect"] = info.baseEffect;
 	material_metadata["textures"] = info.textures;
+
+	material_metadata["floatParamters"] = info.floatParamters;
+	material_metadata["intParamters"] = info.intParamters;
+	material_metadata["float3Paramters"] = info.vec3Paramters;
+	material_metadata["float4Paramters"] = info.vec4Paramters;
+
 
 	switch (info.transparency)
 	{

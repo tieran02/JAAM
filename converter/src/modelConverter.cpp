@@ -114,6 +114,26 @@ namespace
 				}
 			}
 
+			//convert material parameters (e.g shininess)
+			float shininess;
+			if (aiGetMaterialFloat(material, AI_MATKEY_SHININESS, &shininess) == AI_SUCCESS)
+			{
+				newMaterial.floatParamters["shininess"] = shininess;
+			}
+			float shininessStrength;
+			if (aiGetMaterialFloat(material, AI_MATKEY_SHININESS_STRENGTH, &shininessStrength) == AI_SUCCESS)
+			{
+				newMaterial.floatParamters["specularStrength"] = shininessStrength;
+			}
+			aiColor4D spec_color;
+			if (aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &spec_color) == AI_SUCCESS)
+			{
+				std::array<float, 4> color;
+				memcpy(color.data(), &spec_color[0], 16);
+				newMaterial.vec4Paramters["specularColour"] = color;
+
+			}
+
 			fs::path materialPath = outputFolder / (matname + ".mat");
 
 			AssetFile newFile = PackMaterial(newMaterial);

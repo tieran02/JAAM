@@ -10,6 +10,7 @@ namespace Asset
 		Masked
 	};
 
+
 	struct MaterialInfo
 	{
 		MaterialInfo();
@@ -18,6 +19,12 @@ namespace Asset
 		std::string name;
 		std::string baseEffect;
 		std::unordered_map<std::string, std::string >textures; // name/type -> path
+
+		std::unordered_map<std::string, float> floatParamters;
+		std::unordered_map<std::string, int> intParamters;
+		std::unordered_map<std::string, std::array<float, 3>> vec3Paramters;
+		std::unordered_map<std::string, std::array<float, 4>> vec4Paramters;
+
 		TransparencyMode transparency;
 	};
 
