@@ -20,8 +20,8 @@ namespace Asset
 		//std::vector<char> binaryBlob;
 		Buffer binaryBlob;
 
-		bool SaveBinaryFile(const char* path);
-		bool LoadBinaryFile(const char* path);
+		bool SaveBinaryFile(std::string_view path);
+		bool LoadBinaryFile(std::string_view path);
 	};
 
 	CompressionMode ParseCompression(const char* f);

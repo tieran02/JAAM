@@ -1,5 +1,6 @@
 #include "assetFile.h"
 #include <fstream>
+#include <filesystem>
 
 using namespace Asset;
 
@@ -11,41 +12,53 @@ AssetFile::AssetFile() :
 
 }
 
-bool AssetFile::SaveBinaryFile(const char* path)
+bool AssetFile::SaveBinaryFile(std::string_view path)
 {
-	std::ofstream outfile;
-	outfile.open(path, std::ios::binary | std::ios::out);
+	std::filesystem::path jsonPath(path);
+	jsonPath.replace_extension(jsonPath.extension().string() + ".meta");
+	std::ofstream jsonFile;
+	jsonFile.open(jsonPath, std::ios::out);
+	jsonFile << json.data();
+	jsonFile.close();
 
-	outfile.write(type.data(), type.size());
+	std::ofstream binFile;
+	binFile.open(path.data(), std::ios::binary | std::ios::out);
+
+	binFile.write(type.data(), type.size());
 
 	//version
-	outfile.write(reinterpret_cast<const char*>(&version), sizeof(version));
+	binFile.write(reinterpret_cast<const char*>(&version), sizeof(version));
 
 	//checksum
-	outfile.write(reinterpret_cast<const char*>(&checksum), sizeof(checksum));
-
-	//json
-	size_t jsonSize = json.size();
-	outfile.write(reinterpret_cast<const char*>(&jsonSize), sizeof(jsonSize));
-	outfile.write(reinterpret_cast<const char*>(json.data()), jsonSize);
+	binFile.write(reinterpret_cast<const char*>(&checksum), sizeof(checksum));
 
 	//blob data
-	outfile << binaryBlob;
+	binFile << binaryBlob;
 
-	outfile.close();
+	binFile.close();
 
 	return true;
 }
 
-bool AssetFile::LoadBinaryFile(const char* path)
+bool AssetFile::LoadBinaryFile(std::string_view path)
 {
+	std::filesystem::path jsonPath(path);
+	jsonPath.replace_extension(jsonPath.extension().string() + ".meta");
+
+	std::ifstream jsonFile;
+	std::stringstream buffer;
+	jsonFile.open(jsonPath, std::ios::in);
+	if (!jsonFile.is_open()) return false;
+
+	buffer << jsonFile.rdbuf();
+	jsonFile.close();
+	json = buffer.str();
+
+	//Load binary file
 	std::ifstream infile;
-	infile.open(path, std::ios::binary | std::ios::in);
+	infile.open(path.data(), std::ios::binary | std::ios::in);
 
 	if (!infile.is_open()) return false;
-
-	//move file cursor to beginning
-	//infile.seekg(0);
 
 	infile.read(type.data(), type.size());
 
@@ -54,11 +67,6 @@ bool AssetFile::LoadBinaryFile(const char* path)
 
 	//checksum
 	infile.read(reinterpret_cast<char*>(&checksum), sizeof(checksum));
-
-	size_t jsonSize = 0;
-	infile.read(reinterpret_cast<char*>(&jsonSize), sizeof(jsonSize));
-	json.resize(jsonSize);
-	infile.read(reinterpret_cast<char*>(json.data()), jsonSize);
 
 	//blob data
 	infile >> binaryBlob;
