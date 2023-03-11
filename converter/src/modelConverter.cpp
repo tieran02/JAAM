@@ -191,8 +191,9 @@ namespace
 				uint32_t stride = mesh.vertexBuffer.GetStride();
 
 				std::string matname = AssimpMaterialName(scene, aiMesh->mMaterialIndex);
-				fs::path materialpath = (outputFolder.string() + "_materials/" + matname + ".mat");
-				model.meshMaterials.emplace_back(materialpath.string());
+				fs::path materialRelativePath = GetRelativePathFrom(outputFolder, rootPath.string());
+				std::string materialpath = (materialRelativePath.string() + "_materials/" + matname + ".mat");
+				model.meshMaterials.emplace_back(materialpath);
 
 				mesh.vertexBuffer.data.resize(aiMesh->mNumVertices * stride);
 				for (unsigned int v = 0; v < aiMesh->mNumVertices; v++)
